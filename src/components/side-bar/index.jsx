@@ -43,6 +43,7 @@ class SideBar extends Component {
     })
   }
   getMenuNodes_reduce = (menuList) => {
+    const path = this.props.location.pathname
     return menuList.reduce((pre, item) => {
       if (!item.children) {
         pre.push((
@@ -54,6 +55,13 @@ class SideBar extends Component {
           </Menu.Item>
         ))
       } else {
+        // 查找一个与当前请求路径匹配的子 item
+        const citem = item.children.find(citem => path.indexOf(citem.key) === 0)
+        // 存在，当前 item 的子列表需要打开
+        if (citem) {
+          // 挂载到组件属性上
+          this.openKey = item.key
+        }
         pre.push((
           <SubMenu
             key={item.key}
@@ -71,8 +79,19 @@ class SideBar extends Component {
       return pre
     }, [])
   }
+  // 第一次 render 之前执行一次
+  componentWillMount() {
+    this.menuNodes = this.getMenuNodes_reduce(menuList)
+  }
   render() {
-    const path = this.props.location.pathname
+    console.log(this.openKey)
+    let path = this.props.location.pathname
+    console.log('path:', path)
+    if(path.indexOf('/product')===0) { // 当前请求的是商品或其子路由界面
+      path = '/product'
+    }
+    // 得到需要打开菜单项的 key
+    const openKey = this.openKey
     return (
       <div className='side-bar'>
         <Link to='/home' className='side-bar-header'>
@@ -82,8 +101,8 @@ class SideBar extends Component {
         <Menu
           mode='inline'
           theme='dark'
-          // defaultSelectedKeys={[path]}
           selectedKeys={[path]}
+          defaultOpenKeys={[openKey]}
         >
           {/* <Menu.Item key='/home'>
             <Link to='/home'>
@@ -103,7 +122,7 @@ class SideBar extends Component {
            
           </SubMenu> */}
           {
-            this.getMenuNodes_reduce(menuList)
+            this.menuNodes
           }
         </Menu>
       </div>
